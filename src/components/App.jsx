@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Audio } from 'react-loader-spinner';
@@ -9,68 +9,61 @@ import Button from './Button/Button';
 
 import css from './App.module.css';
 
-export class App extends Component {
-  state = {
-    collection: [],
-    isLoading: false,
-    isButton: false,
-    namePictures: '',
-    page: 1,
-  };
+export const App = () => {
+  const [collection, setCollection] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isButton, setIsButton] = useState(false);
+  const [namePictures, setNamePictures] = useState('');
+  const [page, setPage] = useState(1);
 
-  async componentDidUpdate(prevProps, prevState) {
-    const { namePictures, page } = this.state;
-
-    if (prevState.namePictures !== namePictures || prevState.page !== page) {
+  useEffect(() => {
+    (async () => {
+      if (!namePictures) {
+        return;
+      }
       try {
-        this.setState({ isLoading: true });
+        setIsLoading(true);
         const response = await API.fetchPictures(namePictures, page);
+        setCollection(prevState => [...prevState, ...response.hits]);
 
-        this.setState(({ collection }) => ({
-          collection: [...collection, ...response.hits],
-        }));
+        setIsLoading(false);
+        setIsButton(true);
 
         if (page >= response.totalHits / 12) {
-          this.setState({ isLoading: false, isButton: false });
+          setIsButton(false);
           return;
         }
-        this.setState({ isLoading: false });
-
-        setTimeout(() => {
-          this.setState({ isButton: true });
-        }, 500);
       } catch (error) {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
         console.log(error.message);
       }
-    }
-  }
+    })();
+  }, [namePictures, page]);
 
-  handleStateChange = namePictures => {
-    if (namePictures === this.state.namePictures) {
+  const handleStateChange = async query => {
+    if (query === namePictures) {
       return;
     }
-    this.setState({ namePictures, page: 1, collection: [], isButton: false });
+    setNamePictures(query);
+    setPage(1);
+    setCollection([]);
+    setIsButton(false);
   };
 
-  handlePageChange = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-      isButton: false,
-    }));
+  const handlePageChange = async () => {
+    setPage(prevState => prevState + 1);
+    setIsButton(false);
   };
 
-  render() {
-    const { isLoading, isButton, collection } = this.state;
-
-    return (
-      <div className={css.app}>
-        <Searchbar onSubmit={this.handleStateChange}></Searchbar>
-        <ImageGallery items={collection}></ImageGallery>
-        {isLoading && <Audio wrapperClass={css.loader}></Audio>}
-        {isButton && <Button onClick={this.handlePageChange}></Button>}
-        <ToastContainer></ToastContainer>
-      </div>
-    );
-  }
-}
+  return (
+    <div className={css.app}>
+      <Searchbar onSubmit={handleStateChange}></Searchbar>
+      <ImageGallery items={collection}></ImageGallery>
+      {isLoading && <Audio wrapperClass={css.loader}></Audio>}
+      {collection.length > 0 && isButton && (
+        <Button onClick={handlePageChange}></Button>
+      )}
+      <ToastContainer></ToastContainer>
+    </div>
+  );
+};

@@ -17,8 +17,8 @@ const Modal = ({ closeModal, url, tag }) => {
     }
   };
 
-  const handlePress = e => {
-    if (e.key === 'Escape') {
+  const handlePress = ({ key }) => {
+    if (key === 'Escape') {
       closeModal();
     }
   };

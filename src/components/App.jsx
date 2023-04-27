@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Audio } from 'react-loader-spinner';
 import * as API from './service/api';
@@ -18,20 +19,20 @@ export const App = () => {
 
   useEffect(() => {
     (async () => {
-      if (!namePictures) {
-        return;
-      }
+      if (!namePictures) return;
+
       try {
         setIsLoading(true);
         const response = await API.fetchPictures(namePictures, page);
         setCollection(prevState => [...prevState, ...response.hits]);
-
         setIsLoading(false);
         setIsButton(true);
 
+        if (!response.totalHits) {
+          return toast.error(`No images found for ${namePictures} query`);
+        }
         if (page >= response.totalHits / 12) {
-          setIsButton(false);
-          return;
+          return setIsButton(false);
         }
       } catch (error) {
         setIsLoading(false);
@@ -40,17 +41,16 @@ export const App = () => {
     })();
   }, [namePictures, page]);
 
-  const handleStateChange = async query => {
-    if (query === namePictures) {
-      return;
-    }
+  const handleStateChange = query => {
+    if (query === namePictures) return;
+
     setNamePictures(query);
     setPage(1);
     setCollection([]);
     setIsButton(false);
   };
 
-  const handlePageChange = async () => {
+  const handlePageChange = () => {
     setPage(prevState => prevState + 1);
     setIsButton(false);
   };

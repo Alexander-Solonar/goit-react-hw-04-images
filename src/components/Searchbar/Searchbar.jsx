@@ -6,15 +6,14 @@ import css from './Searchbar.module.css';
 const Searchbar = ({ onSubmit }) => {
   const [namePictures, setNamePictures] = useState('');
 
-  const handleNameChange = event => {
-    const { value } = event.target;
-    setNamePictures(value);
+  const handleNameChange = ({ target }) => {
+    setNamePictures(target.value);
   };
 
   const handleSubmit = event => {
     event.preventDefault();
 
-    if (namePictures.trim() === '') {
+    if (!namePictures.trim()) {
       return toast.error('Enter name please!');
     }
     onSubmit(namePictures);
